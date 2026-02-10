@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gázenergia Ajánlat-elemző - Nagyatád Város Önkormányzata</title>
+    <title>Gázárajánlat Kiértékelő - Nagyatád Város Önkormányzata</title>
     <!-- Font and Icons -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@700;800;900&display=swap"
@@ -114,6 +114,7 @@
             padding: 1.75rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
             transition: transform 0.2s;
+            margin-bottom: 2rem;
         }
 
         .card-title {
@@ -300,6 +301,20 @@
         .risk-item i {
             margin-top: 0.25rem;
         }
+
+        .tag {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        .tag-info {
+            background: rgba(92, 107, 192, 0.2);
+            color: var(--primary);
+        }
     </style>
 </head>
 
@@ -361,7 +376,7 @@
                     </div>
                 </div>
 
-                <div class="card" style="margin-top: 1.5rem;">
+                <div class="card">
                     <h3 class="card-title" style="color:var(--accent);"><i class="fas fa-microchip"></i> Gyorsadatok
                     </h3>
                     <div class="stats-grid">
@@ -385,8 +400,11 @@
 
             <!-- Main Display Side -->
             <div class="main-panel">
-                <div class="card mb-4">
-                    <h3 class="card-title"><i class="fas fa-chart-line"></i> Költség-vetület (Havi Ft/kWh)</h3>
+                <div class="card">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-line"></i> Költség-vetület (Ft/kWh)
+                        <span class="tag tag-info">Bázis: 2025 várható havi árak</span>
+                    </h3>
                     <div class="chart-container">
                         <canvas id="compChart"></canvas>
                     </div>
@@ -399,10 +417,10 @@
                             <thead>
                                 <tr>
                                     <th>Hónap</th>
-                                    <th>HUDEX (EUR)</th>
-                                    <th>Fix ár</th>
-                                    <th>Indexált ár</th>
-                                    <th>Különbözet</th>
+                                    <th>HUDEX (EUR/MWh)</th>
+                                    <th>Fix ár (Ft/kWh)</th>
+                                    <th>Indexált ár (Ft/kWh)</th>
+                                    <th>Különbözet (Ft)</th>
                                     <th>Státusz</th>
                                 </tr>
                             </thead>
@@ -411,7 +429,34 @@
                     </div>
                 </div>
 
-                <div class="card" style="margin-top: 1.5rem;">
+                <!-- Historical Section -->
+                <div class="card">
+                    <h3 class="card-title" style="color:var(--secondary);"><i class="fas fa-history"></i> Történelmi
+                        Visszatekintés (CEEGEX adatok)</h3>
+                    <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">
+                        Az alábbi táblázat azt mutatja, hogyan teljesített volna a piac a korábbi években a jelenlegi
+                        <strong>23,5 Ft/kWh</strong>-s fix árhoz képest. (Átváltás: 1 kWh = 3.6 MJ)
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Év</th>
+                                    <th>Piac (EUR/MWh)</th>
+                                    <th>Piac (Ft/MJ)</th>
+                                    <th>Piac (Ft/kWh)</th>
+                                    <th>Fix ár (Ft/kWh)</th>
+                                    <th>Különbség</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historicalTableBody">
+                                <!-- JS fills this -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
                     <h3 class="card-title" style="color:var(--warning);"><i class="fas fa-shield-alt"></i> Szakmai
                         Kiértékelés & Kockázatok</h3>
                     <div id="riskAnalysis">
@@ -426,6 +471,15 @@
         // 2025 HUDEX Baseline EUR/MWh
         const hudex2025 = [32, 33.5, 31, 29.5, 30.2, 32.8, 34.1, 35.5, 34.8, 36.2, 38.5, 39.1];
         const months = ['Jan', 'Feb', 'Már', 'Ápr', 'Máj', 'Jún', 'Júl', 'Aug', 'Szept', 'Okt', 'Nov', 'Dec'];
+
+        // Historical CEEGEX data
+        const historicalData = [
+            { year: 2024, eurMwh: 34.34, ftMj: 3.82 },
+            { year: 2023, eurMwh: 41.51, ftMj: 4.61 },
+            { year: 2022, eurMwh: 121.75, ftMj: 13.53 },
+            { year: 2021, eurMwh: 45.42, ftMj: 5.05 },
+            { year: 2020, eurMwh: 10.15, ftMj: 1.13 }
+        ];
 
         let chartObj = null;
 
@@ -495,6 +549,28 @@
 
             updateRiskAnalysis(savings, fixPriceKWh, indexedRates, eurRate);
             updateChart(indexedRates, fixPriceKWh);
+            updateHistorical(fixPriceKWh);
+        }
+
+        function updateHistorical(currentFix) {
+            const hBody = document.getElementById('historicalTableBody');
+            hBody.innerHTML = '';
+
+            historicalData.forEach(d => {
+                const ftKWh = d.ftMj * 3.6;
+                const diff = currentFix - ftKWh;
+                const row = hBody.insertRow();
+                const colorClass = diff > 0 ? 'text-success' : 'text-danger';
+
+                row.innerHTML = `
+                <td style="font-weight:700;">${d.year}</td>
+                <td>${d.eurMwh.toFixed(2)}</td>
+                <td>${d.ftMj.toFixed(2)}</td>
+                <td style="font-weight:700; color:var(--accent);">${ftKWh.toFixed(2)}</td>
+                <td>${currentFix.toFixed(1)}</td>
+                <td class="${colorClass}" style="font-weight:bold;">${diff > 0 ? 'ELŐNY: ' : 'HÁTRÁNY: '}${Math.abs(diff).toFixed(2)} Ft</td>
+            `;
+            });
         }
 
         function updateRiskAnalysis(savings, fixPriceKWh, indexedRates, eurRate) {
@@ -584,13 +660,21 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { labels: { color: '#94a3b8', font: { weight: 'bold' } } }
+                            legend: { labels: { color: '#94a3b8', font: { weight: 'bold' } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.dataset.label + ': ' + context.parsed.y + ' Ft/kWh';
+                                    }
+                                }
+                            }
                         },
                         scales: {
                             y: {
                                 beginAtZero: false,
                                 grid: { color: 'rgba(255,255,255,0.05)' },
-                                ticks: { color: '#94a3b8' }
+                                ticks: { color: '#94a3b8' },
+                                title: { display: true, text: 'Ft/kWh', color: '#94a3b8' }
                             },
                             x: {
                                 grid: { display: false },
