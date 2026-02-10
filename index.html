@@ -61,6 +61,9 @@
             position: relative;
             overflow: hidden;
             border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         header::after {
@@ -91,6 +94,37 @@
             color: var(--text-muted);
             font-weight: 500;
             font-size: 1.1rem;
+        }
+
+        /* Toggle Button */
+        .unit-toggle {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            border-radius: 2rem;
+            display: flex;
+            gap: 0.25rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .unit-btn {
+            padding: 0.5rem 1.25rem;
+            border-radius: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 800;
+            cursor: pointer;
+            border: none;
+            color: var(--text-muted);
+            background: transparent;
+            transition: all 0.2s;
+        }
+
+        .unit-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(123, 97, 255, 0.4);
         }
 
         /* Grid Layout */
@@ -284,7 +318,6 @@
             margin-top: 1rem;
         }
 
-        /* Risk List */
         .risk-list {
             list-style: none;
             margin-top: 1rem;
@@ -326,6 +359,10 @@
                 <h1>Gázenergia Ajánlat-elemző</h1>
                 <p class="subtitle">Nagyatád Város Önkormányzata • Irodai Döntéstámogató Rendszer</p>
             </div>
+            <div class="unit-toggle">
+                <button id="btnKWh" class="unit-btn active" onclick="setUnit('kWh')">Ft/kWh</button>
+                <button id="btnMJ" class="unit-btn" onclick="setUnit('MJ')">Ft/MJ</button>
+            </div>
         </header>
 
         <div class="dashboard-grid">
@@ -335,15 +372,15 @@
                     <h3 class="card-title text-primary"><i class="fas fa-sliders-h"></i> Paraméterek</h3>
 
                     <div class="input-group">
-                        <label>Éves fogyasztás (kWh)</label>
-                        <input type="number" id="annualKWh" value="400000" min="0" oninput="calculate()">
+                        <label>Éves fogyasztás (<span class="unit-label">kWh</span>)</label>
+                        <input type="number" id="annualIn" value="400000" min="0" oninput="calculate()">
                         <div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">kB. <span
-                                id="m3Equivalent">0</span> m3 (1 m3 ≈ 10.5 kWh)</div>
+                                id="secEquivalent">0</span> <span id="secUnit">m3</span></div>
                     </div>
 
                     <div class="input-group">
-                        <label>Fix díjas alapár (Ft/kWh)</label>
-                        <input type="number" id="fixPrice" value="23.5" step="0.1" oninput="calculate()">
+                        <label>Fix díjas alapár (Ft/<span class="unit-label">kWh</span>)</label>
+                        <input type="number" id="fixPriceIn" value="23.5" step="0.1" oninput="calculate()">
                         <div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Jelenlegi érvényes
                             szerződés</div>
                     </div>
@@ -402,7 +439,7 @@
             <div class="main-panel">
                 <div class="card">
                     <h3 class="card-title">
-                        <i class="fas fa-chart-line"></i> Költség-vetület (Ft/kWh)
+                        <i class="fas fa-chart-line"></i> Költség-vetület (<span class="unit-label">Ft/kWh</span>)
                         <span class="tag tag-info">Bázis: 2025 várható havi árak</span>
                     </h3>
                     <div class="chart-container">
@@ -418,8 +455,8 @@
                                 <tr>
                                     <th>Hónap</th>
                                     <th>HUDEX (EUR/MWh)</th>
-                                    <th>Fix ár (Ft/kWh)</th>
-                                    <th>Indexált ár (Ft/kWh)</th>
+                                    <th>Fix ár (<span class="unit-label">Ft/kWh</span>)</th>
+                                    <th>Indexált ár (<span class="unit-label">Ft/kWh</span>)</th>
                                     <th>Különbözet (Ft)</th>
                                     <th>Státusz</th>
                                 </tr>
@@ -435,18 +472,18 @@
                         Visszatekintés (CEEGEX adatok)</h3>
                     <div style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1rem;">
                         Az alábbi táblázat azt mutatja, hogyan teljesített volna a piac a korábbi években a jelenlegi
-                        <strong>23,5 Ft/kWh</strong>-s fix árhoz képest. (Átváltás: 1 kWh = 3.6 MJ)
+                        <strong><span id="histFixVal">23.5</span> <span class="unit-label">Ft/kWh</span></strong>-s fix
+                        árhoz képest.
                     </div>
                     <div style="overflow-x: auto;">
-                        <table>
+                        <table id="histTable">
                             <thead>
                                 <tr>
                                     <th>Év</th>
                                     <th>Piac (EUR/MWh)</th>
-                                    <th>Piac (Ft/MJ)</th>
-                                    <th>Piac (Ft/kWh)</th>
-                                    <th>Fix ár (Ft/kWh)</th>
-                                    <th>Különbség</th>
+                                    <th>Piac (<span class="unit-label">Ft/kWh</span>)</th>
+                                    <th>Fix ár (<span class="unit-label">Ft/kWh</span>)</th>
+                                    <th>Különbség (Ft)</th>
                                 </tr>
                             </thead>
                             <tbody id="historicalTableBody">
@@ -472,7 +509,7 @@
         const hudex2025 = [32, 33.5, 31, 29.5, 30.2, 32.8, 34.1, 35.5, 34.8, 36.2, 38.5, 39.1];
         const months = ['Jan', 'Feb', 'Már', 'Ápr', 'Máj', 'Jún', 'Júl', 'Aug', 'Szept', 'Okt', 'Nov', 'Dec'];
 
-        // Historical CEEGEX data
+        // Historical CEEGEX data (Price in Ft/MJ)
         const historicalData = [
             { year: 2024, eurMwh: 34.34, ftMj: 3.82 },
             { year: 2023, eurMwh: 41.51, ftMj: 4.61 },
@@ -481,21 +518,61 @@
             { year: 2020, eurMwh: 10.15, ftMj: 1.13 }
         ];
 
+        let currentUnit = 'kWh'; // 'kWh' or 'MJ'
         let chartObj = null;
 
         function formatNumber(num) {
             return new Intl.NumberFormat('hu-HU').format(Math.round(num));
         }
 
+        function setUnit(unit) {
+            if (currentUnit === unit) return;
+
+            const oldUnit = currentUnit;
+            currentUnit = unit;
+
+            // Update UI buttons
+            document.getElementById('btnKWh').classList.toggle('active', unit === 'kWh');
+            document.getElementById('btnMJ').classList.toggle('active', unit === 'MJ');
+
+            // Update labels
+            document.querySelectorAll('.unit-label').forEach(el => el.innerText = unit);
+
+            // Convert input values
+            const annualIn = document.getElementById('annualIn');
+            const fixPriceIn = document.getElementById('fixPriceIn');
+
+            if (unit === 'MJ') {
+                annualIn.value = (parseFloat(annualIn.value) * 3.6).toFixed(0);
+                fixPriceIn.value = (parseFloat(fixPriceIn.value) / 3.6).toFixed(2);
+            } else {
+                annualIn.value = (parseFloat(annualIn.value) / 3.6).toFixed(0);
+                fixPriceIn.value = (parseFloat(fixPriceIn.value) * 3.6).toFixed(1);
+            }
+
+            calculate();
+        }
+
         function calculate() {
-            const annualKWh = parseFloat(document.getElementById('annualKWh').value) || 0;
-            const fixPriceKWh = parseFloat(document.getElementById('fixPrice').value) || 0;
+            const annualIn = parseFloat(document.getElementById('annualIn').value) || 0;
+            const fixPriceIn = parseFloat(document.getElementById('fixPriceIn').value) || 0;
             const marginEUR = parseFloat(document.getElementById('traderMargin').value) || 0;
             const eurRate = parseFloat(document.getElementById('eurRateRange').value);
             const shiftFactor = 1 + (parseFloat(document.getElementById('marketShift').value) / 100);
 
-            // Standard conversion
-            document.getElementById('m3Equivalent').innerText = formatNumber(annualKWh / 10.5);
+            let annualKWh, fixPriceKWh;
+
+            if (currentUnit === 'MJ') {
+                annualKWh = annualIn / 3.6;
+                fixPriceKWh = fixPriceIn * 3.6;
+                document.getElementById('secEquivalent').innerText = formatNumber(annualIn / 10.5 / 3.6);
+                document.getElementById('secUnit').innerText = 'm3';
+            } else {
+                annualKWh = annualIn;
+                fixPriceKWh = fixPriceIn;
+                document.getElementById('secEquivalent').innerText = formatNumber(annualIn / 10.5);
+                document.getElementById('secUnit').innerText = 'm3';
+            }
 
             const totalKWh = annualKWh;
             const monthlyKWh = totalKWh / 12;
@@ -503,7 +580,7 @@
             let totalFixCost = totalKWh * fixPriceKWh;
             let totalIndexedCost = 0;
 
-            const indexedRates = [];
+            const displayIndexedRates = [];
             const tableBody = document.querySelector('#detailsTable tbody');
             tableBody.innerHTML = '';
 
@@ -513,9 +590,11 @@
                 const monthlyCost = monthlyKWh * indexedRateKWh;
                 totalIndexedCost += monthlyCost;
 
-                indexedRates.push(indexedRateKWh.toFixed(2));
+                const displayRate = currentUnit === 'MJ' ? (indexedRateKWh / 3.6).toFixed(2) : indexedRateKWh.toFixed(2);
+                displayIndexedRates.push(displayRate);
 
-                const diff = fixPriceKWh - indexedRateKWh;
+                const displayFix = fixPriceIn.toFixed(currentUnit === 'MJ' ? 2 : 1);
+                const diff = fixPriceIn - parseFloat(displayRate);
                 const statusIcon = diff > 0 ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="fas fa-exclamation-triangle text-danger"></i>';
                 const diffClass = diff > 0 ? 'text-success' : 'text-danger';
 
@@ -523,8 +602,8 @@
                 row.innerHTML = `
                 <td>${months[i]}</td>
                 <td>${adjustedBase.toFixed(1)}</td>
-                <td style="font-weight:600;">${fixPriceKWh}</td>
-                <td style="font-weight:700; color:var(--accent);">${indexedRateKWh.toFixed(2)}</td>
+                <td style="font-weight:600;">${displayFix}</td>
+                <td style="font-weight:700; color:var(--accent);">${displayRate}</td>
                 <td class="${diffClass}" style="font-weight:bold;">${(Math.abs(diff)).toFixed(2)}</td>
                 <td style="text-align:center;">${statusIcon}</td>
             `;
@@ -533,6 +612,7 @@
             // Update Stats
             document.getElementById('totalFixPrice').innerText = formatNumber(totalFixCost / 1000);
             document.getElementById('totalIndexedPrice').innerText = formatNumber(totalIndexedCost / 1000);
+            document.getElementById('histFixVal').innerText = fixPriceIn.toFixed(currentUnit === 'MJ' ? 2 : 1);
 
             const savings = totalFixCost - totalIndexedCost;
             const savingsEl = document.getElementById('savingsResult');
@@ -547,40 +627,37 @@
                 savingsVal.innerText = formatNumber(Math.abs(savings)) + " Ft veszteség";
             }
 
-            updateRiskAnalysis(savings, fixPriceKWh, indexedRates, eurRate);
-            updateChart(indexedRates, fixPriceKWh);
-            updateHistorical(fixPriceKWh);
+            updateRiskAnalysis(savings, fixPriceKWh, displayIndexedRates, eurRate, fixPriceIn);
+            updateChart(displayIndexedRates, fixPriceIn);
+            updateHistorical(fixPriceIn);
         }
 
-        function updateHistorical(currentFix) {
+        function updateHistorical(currentFixIn) {
             const hBody = document.getElementById('historicalTableBody');
             hBody.innerHTML = '';
 
             historicalData.forEach(d => {
-                const ftKWh = d.ftMj * 3.6;
-                const diff = currentFix - ftKWh;
+                const histValIn = currentUnit === 'MJ' ? d.ftMj : d.ftMj * 3.6;
+                const diff = currentFixIn - histValIn;
                 const row = hBody.insertRow();
                 const colorClass = diff > 0 ? 'text-success' : 'text-danger';
 
                 row.innerHTML = `
                 <td style="font-weight:700;">${d.year}</td>
                 <td>${d.eurMwh.toFixed(2)}</td>
-                <td>${d.ftMj.toFixed(2)}</td>
-                <td style="font-weight:700; color:var(--accent);">${ftKWh.toFixed(2)}</td>
-                <td>${currentFix.toFixed(1)}</td>
+                <td style="font-weight:700; color:var(--accent);">${histValIn.toFixed(2)}</td>
+                <td>${currentFixIn.toFixed(currentUnit === 'MJ' ? 2 : 1)}</td>
                 <td class="${colorClass}" style="font-weight:bold;">${diff > 0 ? 'ELŐNY: ' : 'HÁTRÁNY: '}${Math.abs(diff).toFixed(2)} Ft</td>
             `;
             });
         }
 
-        function updateRiskAnalysis(savings, fixPriceKWh, indexedRates, eurRate) {
+        function updateRiskAnalysis(savings, fixPriceKWh, indexedRates, eurRate, fixPriceIn) {
             const riskEl = document.getElementById('riskAnalysis');
             let html = '';
 
-            const maxIndexed = Math.max(...indexedRates);
             const avgIndexed = indexedRates.reduce((a, b) => parseFloat(a) + parseFloat(b), 0) / 12;
 
-            // Proposal
             if (savings > 0) {
                 html += `
                 <div class="alert-box alert-success">
@@ -588,7 +665,7 @@
                     <div>
                         <strong>Javaslat: Átállás Indexáltra ajánlott.</strong> 
                         A modell alapján az éves megtakarítás eléri a <strong>${formatNumber(savings)} Ft</strong>-ot. 
-                        Az átlagos egységár (${avgIndexed.toFixed(2)} Ft/kWh) 10-15%-kal a jelenlegi fix ár alatt marad.
+                        Az átlagos egységár (${avgIndexed.toFixed(2)} Ft/${currentUnit}) 10-15%-kal a jelenlegi fix ár alatt marad.
                     </div>
                 </div>
             `;
@@ -598,26 +675,17 @@
                     <i class="fas fa-hand-paper fa-2x"></i>
                     <div>
                         <strong>Javaslat: Maradás a FIX díjas szerződésben.</strong> 
-                        A jelenlegi piaci viszonyok és az árrés mellett az indexált ár átlagosan ${Math.abs(avgIndexed - fixPriceKWh).toFixed(2)} Ft-tal magasabb a fix díjnál.
+                        A jelenlegi piaci viszonyok mellett az indexált ár átlagosan ${Math.abs(avgIndexed - fixPriceIn).toFixed(2)} Ft-tal magasabb a fix díjnál.
                     </div>
                 </div>
             `;
             }
 
-            // Risk factors
             html += '<p style="margin-top:1.5rem; font-weight:700; color:var(--text-main);"><i class="fas fa-exclamation-triangle text-warning"></i> Kritikus kockázati tényezők:</p>';
             html += '<ul class="risk-list">';
-
-            html += `<li class="risk-item"><i class="fas fa-money-bill-wave text-warning"></i> <span><strong>Valutakockázat:</strong> Az EUR/HUF árfolyam minden 5 Ft-os romlása kB. 0.5 Ft-tal drágítja az indexált energiát (${eurRate} Ft-os bázison).</span></li>`;
-
-            if (maxIndexed > fixPriceKWh) {
-                html += `<li class="risk-item"><i class="fas fa-chart-line text-danger"></i> <span><strong>Szezonalitás:</strong> A téli hónapokban a tőzsdei ár elérheti a ${maxIndexed} Ft/kWh szintet, ami már a jelenlegi fix ár felett van.</span></li>`;
-            }
-
+            html += `<li class="risk-item"><i class="fas fa-money-bill-wave text-warning"></i> <span><strong>Valutakockázat:</strong> Az EUR/HUF árfolyam minden 5 Ft-os romlása kB. ${currentUnit === 'MJ' ? '0.14' : '0.5'} Ft-tal drágítja az indexált energiát.</span></li>`;
             html += `<li class="risk-item"><i class="fas fa-globe-europe text-primary"></i> <span><strong>Geopolitika:</strong> Az indexált ár azonnal leköveti a gázpiaci sokkokat, míg a fix ár pufferként szolgál.</span></li>`;
-            html += `<li class="risk-item"><i class="fas fa-file-contract text-accent"></i> <span><strong>Árrés rögzítés:</strong> A 20 EUR/MWh fix elem, de a tőzsdei változékonyság miatt a teljes ár forintban havonta 10-15%-ot is mozoghat.</span></li>`;
-            html += `<li class="risk-item"><i class="fas fa-balance-scale text-secondary"></i> <span><strong>Likviditás:</strong> Az indexált számlázás változó havi költségei nehezítik az önkormányzati cash-flow tervezést a téli időszakban.</span></li>`;
-
+            html += `<li class="risk-item"><i class="fas fa-balance-scale text-secondary"></i> <span><strong>Likviditás:</strong> Az indexált számlázás változó havi költségei nehezítik az önkormányzati cash-flow tervezést.</span></li>`;
             html += '</ul>';
 
             riskEl.innerHTML = html;
@@ -629,7 +697,10 @@
 
             if (chartObj) {
                 chartObj.data.datasets[0].data = indexedData;
+                chartObj.data.datasets[0].label = `Indexált ár (Ft/${currentUnit})`;
                 chartObj.data.datasets[1].data = fixData;
+                chartObj.data.datasets[1].label = `Fix ár (Ft/${currentUnit})`;
+                chartObj.options.scales.y.title.text = `Ft/${currentUnit}`;
                 chartObj.update();
             } else {
                 chartObj = new Chart(ctx, {
@@ -638,7 +709,7 @@
                         labels: months,
                         datasets: [
                             {
-                                label: 'Indexált ár (Ft/kWh)',
+                                label: `Indexált ár (Ft/${currentUnit})`,
                                 data: indexedData,
                                 borderColor: '#7b61ff',
                                 backgroundColor: 'rgba(123, 97, 255, 0.1)',
@@ -647,7 +718,7 @@
                                 borderWidth: 3
                             },
                             {
-                                label: 'Fix ár (Ft/kWh)',
+                                label: `Fix ár (Ft/${currentUnit})`,
                                 data: fixData,
                                 borderColor: '#ffffff',
                                 borderDash: [5, 5],
@@ -664,7 +735,7 @@
                             tooltip: {
                                 callbacks: {
                                     label: function (context) {
-                                        return context.dataset.label + ': ' + context.parsed.y + ' Ft/kWh';
+                                        return context.dataset.label + ': ' + context.parsed.y + ' Ft/' + currentUnit;
                                     }
                                 }
                             }
@@ -674,7 +745,7 @@
                                 beginAtZero: false,
                                 grid: { color: 'rgba(255,255,255,0.05)' },
                                 ticks: { color: '#94a3b8' },
-                                title: { display: true, text: 'Ft/kWh', color: '#94a3b8' }
+                                title: { display: true, text: 'Ft/' + currentUnit, color: '#94a3b8' }
                             },
                             x: {
                                 grid: { display: false },
@@ -686,7 +757,6 @@
             }
         }
 
-        // Initial run
         calculate();
     </script>
 
