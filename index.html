@@ -452,8 +452,69 @@
             </div>
         </div>
 
+        <!-- Fogyasztási Helyek és Mennyiségek -->
+        <div class="card" style="margin-bottom: 2rem; border-top: 4px solid var(--primary);">
+            <h3 class="card-title" style="color: var(--primary); font-size: 1.6rem; margin-bottom: 1.5rem;">
+                <i class="fas fa-map-marker-alt"></i> Fogyasztási Helyek és Mennyiségek
+            </h3>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fogyasztási Hely</th>
+                            <th style="text-align: right;">Éves Fogyasztás (<span class="unit-label">kWh</span>)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Korányi Sándor utca 2. fszt. 2.</td>
+                            <td style="text-align: right; font-weight: 600;">2 112</td>
+                        </tr>
+                        <tr>
+                            <td>Széchenyi tér 25.</td>
+                            <td style="text-align: right; font-weight: 600;">10 561</td>
+                        </tr>
+                        <tr>
+                            <td>Somogyszobi utca 15/2</td>
+                            <td style="text-align: right; font-weight: 600;">12</td>
+                        </tr>
+                        <tr>
+                            <td>Kiszely László utca 42.</td>
+                            <td style="text-align: right; font-weight: 600;">50 824</td>
+                        </tr>
+                        <tr>
+                            <td>Széchenyi tér 7.</td>
+                            <td style="text-align: right; font-weight: 600;">6 706</td>
+                        </tr>
+                        <tr>
+                            <td>Göröndi utca</td>
+                            <td style="text-align: right; font-weight: 600;">1 353</td>
+                        </tr>
+                        <tr>
+                            <td>Széchenyi tér 13-14</td>
+                            <td style="text-align: right; font-weight: 600;">48 271</td>
+                        </tr>
+                        <tr>
+                            <td>Nagy Imre tér 1.</td>
+                            <td style="text-align: right; font-weight: 600;">8 341</td>
+                        </tr>
+                        <tr>
+                            <td>Szent István park 2.</td>
+                            <td style="text-align: right; font-weight: 600;">274 128</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: rgba(92, 107, 192, 0.1);">
+                            <td style="font-weight: 800; color: var(--primary);">Összesen</td>
+                            <td style="text-align: right; font-weight: 900; color: var(--primary);">402 308</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
 
         <div class="dashboard-grid">
+
             <!-- Control Side -->
             <div class="control-panel">
                 <div class="card">
@@ -461,7 +522,7 @@
 
                     <div class="input-group">
                         <label>Éves fogyasztás (<span class="unit-label">kWh</span>)</label>
-                        <input type="number" id="annualIn" value="400000" min="0" oninput="calculate()">
+                        <input type="number" id="annualIn" value="402308" min="0" oninput="calculate()">
                         <div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">kB. <span
                                 id="secEquivalent">0</span> <span id="secUnit">m3</span></div>
                     </div>
@@ -483,9 +544,9 @@
                     <div class="input-group">
                         <label>EUR/HUF Árfolyam</label>
                         <div class="slider-wrap">
-                            <input type="range" id="eurRateRange" min="300" max="500" value="390"
+                            <input type="range" id="eurRateRange" min="300" max="500" value="378"
                                 oninput="document.getElementById('eurRateVal').innerText = this.value; calculate()">
-                            <span id="eurRateVal">390</span>
+                            <span id="eurRateVal">378</span>
                         </div>
                     </div>
 
