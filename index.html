@@ -465,7 +465,7 @@
                             <th style="text-align: right;">Éves Fogyasztás (<span class="unit-label">kWh</span>)</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="consumptionTableBody">
                         <tr>
                             <td>Korányi Sándor utca 2. fszt. 2.</td>
                             <td style="text-align: right; font-weight: 600;">2 112</td>
@@ -506,7 +506,8 @@
                     <tfoot>
                         <tr style="background: rgba(92, 107, 192, 0.1);">
                             <td style="font-weight: 800; color: var(--primary);">Összesen</td>
-                            <td style="text-align: right; font-weight: 900; color: var(--primary);">402 308</td>
+                            <td id="consumptionTotal"
+                                style="text-align: right; font-weight: 900; color: var(--primary);">402 308</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -660,6 +661,18 @@
         const hudex2025 = [32, 33.5, 31, 29.5, 30.2, 32.8, 34.1, 35.5, 34.8, 36.2, 38.5, 39.1];
         const months = ['Jan', 'Feb', 'Már', 'Ápr', 'Máj', 'Jún', 'Júl', 'Aug', 'Szept', 'Okt', 'Nov', 'Dec'];
 
+        const consumptionData = [
+            { name: 'Korányi Sándor utca 2. fszt. 2.', kwh: 2112 },
+            { name: 'Széchenyi tér 25.', kwh: 10561 },
+            { name: 'Somogyszobi utca 15/2', kwh: 12 },
+            { name: 'Kiszely László utca 42.', kwh: 50824 },
+            { name: 'Széchenyi tér 7.', kwh: 6706 },
+            { name: 'Göröndi utca', kwh: 1353 },
+            { name: 'Széchenyi tér 13-14.', kwh: 48271 },
+            { name: 'Nagy Imre tér 1.', kwh: 8341 },
+            { name: 'Szent István park 2.', kwh: 274128 }
+        ];
+
         // Historical CEEGEX data (Price in Ft/MJ)
         const historicalData = [
             { year: 2024, eurMwh: 34.34, ftMj: 3.82 },
@@ -700,6 +713,18 @@
                 annualIn.value = (parseFloat(annualIn.value) / 3.6).toFixed(0);
                 fixPriceIn.value = (parseFloat(fixPriceIn.value) * 3.6).toFixed(1);
             }
+
+            // Update local consumption table
+            const tableBody = document.getElementById('consumptionTableBody');
+            tableBody.innerHTML = '';
+            let total = 0;
+            consumptionData.forEach(d => {
+                const val = unit === 'MJ' ? d.kwh * 3.6 : d.kwh;
+                total += val;
+                const row = tableBody.insertRow();
+                row.innerHTML = `<td>${d.name}</td><td style="text-align: right; font-weight: 600;">${formatNumber(val)}</td>`;
+            });
+            document.getElementById('consumptionTotal').innerText = formatNumber(total);
 
             calculate();
         }
